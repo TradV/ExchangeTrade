@@ -3,7 +3,7 @@ import csv
 
 def create_csv(file_name, file_header):
     with open(file_name,'w') as f:
-        # print(file_header)
+        print(f"file_name: {file_name}")
         csv_write = csv.writer(f)
         csv_write.writerow(file_header)
 
