@@ -14,6 +14,6 @@ def write_csv(file_name, file_header, row):
         list_data = []
         for key_name in file_header:
             list_data.append(row.get(key_name, "-"))
-        # print(list_data)
+        print(list_data)
         csv_write.writerow(list_data)
 
