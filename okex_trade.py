@@ -10,6 +10,8 @@ import base64
 import zlib
 import datetime
 
+from csv_file import write_csv, create_csv
+
 
 def get_timestamp():
     now = datetime.datetime.now()
@@ -215,7 +217,8 @@ async def subscribe_without_login(url, channels):
 
                     timestamp = get_timestamp()
                     res = inflate(res_b).decode('utf-8')
-                    print(timestamp + res)
+                    # print(timestamp + res)
+                    save_trade_data(res)
 
                     res = eval(res)
                     if 'event' in res:
@@ -404,7 +407,7 @@ url = 'wss://real.okex.com:8443/ws/v3'
 # 公共-K线频道
 # channels = ["spot/candle60s:BTC-USDT"]
 # 公共-交易频道
-channels = ["spot/trade:BTC-USDT", "spot/trade:ETH-USDT"]
+# channels = ["spot/trade:BTC-USDT"]
 # 公共-5档深度频道
 # channels = ["spot/depth5:BTC-USDT"]
 # 公共-400档深度频道
@@ -500,21 +503,37 @@ channels = ["spot/trade:BTC-USDT", "spot/trade:ETH-USDT"]
 # 指数K线
 # channels = ["index/candle60s:BTC-USD"]
 
-loop = asyncio.get_event_loop()
+channels = ["spot/trade:BTC-USDT", "spot/trade:ADA-USDT", "spot/trade:IOTA-USDT", "spot/trade:XLM-USDT", "spot/trade:XMR-USDT",
+            "spot/trade:ZEC-USDT", "spot/trade:DASH-USDT", "spot/trade:XRP-USDT", "spot/trade:ETC-USDT", "spot/trade:BCH-USDT",
+            "spot/trade:BSV-USDT", "spot/trade:EOS-USDT", "spot/trade:ETH-USDT", "spot/trade:LTC-USDT", "spot/trade:OMG-USDT"]
 
-# url = "wss://echo.websocket.org"
-#公共数据 不需要登录（行情，K线，交易数据，资金费率，限价范围，深度数据，标记价格等频道）
-loop.run_until_complete(subscribe_without_login(url, channels))
+FILE_HEADER = ["symbol", "id", "time", "price", "size", "value"]
+file_name = "okex_trade.csv"
 
-#个人数据 需要登录（用户账户，用户交易，用户持仓等频道）
-# loop.run_until_complete(subscribe(url, api_key, passphrase, secret_key, channels))
 
-# loop.close()
+def execute():
+    create_csv(file_name, FILE_HEADER)
+
+    loop = asyncio.get_event_loop()
+
+    loop.run_until_complete(subscribe_without_login(url, channels))
+
+    # loop.close()
+
+
+# Assume only subscribe trade data
+def save_trade_data(text):
+    json_text = json.loads(text)
+    trade_data = json_text.get("data")
+    if trade_data:
+        trade_list = parse_trade(trade_response=trade_data,
+                                 symbol="instrument_id", id="trade_id", time="timestamp", price="price", size="size")
+        append_csv(file_name, trade_list)
 
 
 def parse_trade(trade_response, symbol, id, time, price, size):
     trade_list = []
-    if (trade_response and len(trade_response)):
+    if trade_response and len(trade_response):
         for item in trade_response:
             trade_item = {}
             trade_item["symbol"] = item.get(symbol)
@@ -526,3 +545,11 @@ def parse_trade(trade_response, symbol, id, time, price, size):
             trade_list.append(trade_item)
 
     return trade_list
+
+
+def append_csv(file_name, trade_list):
+    for item in trade_list:
+        write_csv(file_name, FILE_HEADER, item)
+
+
+execute()

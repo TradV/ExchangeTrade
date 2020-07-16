@@ -7,6 +7,7 @@ def create_csv(file_name, file_header):
         csv_write = csv.writer(f)
         csv_write.writerow(file_header)
 
+
 def write_csv(file_name, file_header, row):
     with open(file_name,'a+') as f:
         csv_write = csv.writer(f)
