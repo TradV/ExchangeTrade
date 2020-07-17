@@ -30,6 +30,7 @@ def get_latest_trade(symbol, hour_before, minute_before):
         print(f"last_time: {last_time}, start_time: {start_time}")
         trade_list = get_trade(symbol, last_id)
         last_id, last_time = append_csv(file_name, trade_list)
+        time.sleep(0.1)
 
 
 def get_trade(symbol, last_id):
